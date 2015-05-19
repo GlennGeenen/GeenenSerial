@@ -1,0 +1,16 @@
+{
+  "name": "geenenserial",
+  "version": "0.0.1",
+  "description": "Communicate with serialport.",
+  "author": {
+	"name": "Glenn Geenen",
+	"email": "glenn@geenentijd.be",
+	"url": "http://www.geenentijd.be"
+  },
+  "dependencies": {
+	"serialport": "~1.7.0"
+  },
+  "engines": {
+	"node": ">= 0.10.0"
+  }
+}
