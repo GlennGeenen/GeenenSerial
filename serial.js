@@ -88,7 +88,7 @@
 
 		if (!sp) {
 			sp = new SerialPort.SerialPort('/dev/ttyAMA0', {
-				baudrate: 38400
+				baudrate: 19200
 			});
 			sp.on('open', portOpen);
 			sp.on('error', displayError);
