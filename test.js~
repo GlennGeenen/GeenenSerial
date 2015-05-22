@@ -1,0 +1,19 @@
+var serial = require('./serial');
+
+var i = 0;
+
+console.log('listPorts');
+serial.listPorts(function() {
+	console.log('list done');
+});
+
+clock();
+
+function clock() {
+	++i;
+	console.log(i);
+	serial.sendLines(i, i);
+	setTimeout(clock, 1000);
+}
+
+

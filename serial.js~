@@ -102,7 +102,7 @@
 			if(lineB) {
 				setTimeout(function(){
 					sp.write('X' + formatLine(lineB) + '\r', onWrite);
-				}, 50);	
+				}, 100);	
 			}
 		}
 	}
