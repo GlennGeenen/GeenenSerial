@@ -22,7 +22,7 @@
 
 			for(var i = 0; i < 3; ++i) {
 				tmp = formatSplit(arr[i], started, i === 2);
-				if(tmp[0] !== ' ') {
+				if(tmp[3] === '.') {
 					started = true;
 				}
 				result += tmp;
