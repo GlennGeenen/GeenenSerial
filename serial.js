@@ -1,150 +1,157 @@
 (function () {
 
-	'use strict';
+    'use strict';
 
-	var SerialPort = require('serialport');
-	var sp;
+    var SerialPort = require('serialport');
+    var sp;
 
-	function formatNumber(n) {
-		var hours = Math.floor(+n / 60 / 60);
-		var minutes = Math.floor((+n - (hours * 60 * 60)) / 60);
-		var seconds = Math.round(+n - (hours * 60 * 60) - (minutes * 60));
+    function formatNumber(n) {
+        var hours = Math.floor(+n / 60 / 60);
+        var minutes = Math.floor((+n - (hours * 60 * 60)) / 60);
+        var seconds = Math.round(+n - (hours * 60 * 60) - (minutes * 60));
 
-		var result = formatSplit(hours.toString());
-		result += formatSplit(minutes.toString());
-		result += formatSplit(seconds.toString(), true);
+        var result = formatSplit(hours.toString());
+        result += formatSplit(minutes.toString());
+        result += formatSplit(seconds.toString(), true);
 
-		return result;
-	}
+        return result;
+    }
 
-	function formatSplit(n, end) {
-		if (typeof end === 'undefined') {
-			end = false;
-		}
+    function formatSplit(n, end) {
+        if (typeof end === 'undefined') {
+            end = false;
+        }
 
-		if (n && n.length === 2) {
-			return n[0] + ' ' + n[1] + (end ? ' ' : '.');
-		} else if (n && n.length === 1) {
-			return '0 ' + n[0] + (end ? ' ' : '.');
-		} else {
-			return end ? '0 0 ' : '0 0.';
-		}
-	}
+        if (n && n.length === 2) {
+            return n[0] + ' ' + n[1] + (end ? ' ' : '.');
+        } else if (n && n.length === 1) {
+            return '0 ' + n[0] + (end ? ' ' : '.');
+        } else {
+            return end ? '0 0 ' : '0 0.';
+        }
+    }
 
-	function formatString(time) {
-		if (time.match(/^(?:\d{1,2}:)(?:[0-5]\d:)(?:[0-5]\d)$/g) ||
-			time.match(/^(?:\d{1,2}:)(?:[0-5]\d)$/g)) {
-			var arr = time.split(':');
+    function formatString(time) {
+        if (time.match(/^(?:\d{1,2}:)(?:[0-5]\d:)(?:[0-5]\d)$/g) ||
+            time.match(/^(?:\d{1,2}:)(?:[0-5]\d)$/g)) {
+            var arr = time.split(':');
 
-			while (arr.length < 3) {
-				arr.unshift('');
-			}
+            while (arr.length < 3) {
+                arr.unshift('');
+            }
 
-			var result = formatSplit(arr[0]);
-			result += formatSplit(arr[1]);
-			result += formatSplit(arr[2], true);
+            var result = formatSplit(arr[0]);
+            result += formatSplit(arr[1]);
+            result += formatSplit(arr[2], true);
 
-			return result;
+            return result;
 
-		} else {
-			return '0 0.0 0.0 0 ';
-		}
-	}
+        } else {
+            return '0 0.0 0.0 0 ';
+        }
+    }
 
-	function formatDate(n) {
-		var seconds = n.getHours() * 60 * 60;
-		seconds += n.getMinutes() * 60;
-		seconds += n.getSeconds();
-		return formatNumber(seconds);
-	}
+    function getNumber(n) {
+        var str = n.toString();
+        var i;
+        var result = '';
 
-	function formatLine(n) {
+        for(i = 6; i > str.length; --i) {
+            result += '  ';
+        }
+        for(i = 0; i < str.length && i < 6; ++i) {
+            result += str[i] + ' ';
+        }
+        return result;
+    }
 
-		if (n) {
-			if (typeof n === 'number') {
-				return formatNumber(n);
-			} else if (n instanceof Date) {
-				return formatDate(n);
-			} else {
-				return formatString(n);
-			}
-		} else {
-			console.log('fail');
-			return '0 0.0 0.0 0 ';
-		}
-	}
+    function formatDate(n) {
+        var seconds = n.getHours() * 60 * 60;
+        seconds += n.getMinutes() * 60;
+        seconds += n.getSeconds();
+        return formatNumber(seconds);
+    }
 
-	function formatLines(a, b) {
-		var result = 'W' + formatLine(a) + '\r';
-		result += 'X' + formatLine(b) + '\r';
+    function formatLine(n) {
 
-		// http://en.wikipedia.org/wiki/Seven-segment_display
-		// result += 'Y.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
-		// result += 'Z.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
-		return result;
-	}
+        if (n && n.type && n.value) {
+            if(n.type === 'number') {
+                return getNumber(n.value);
+            } else if (typeof n.value === 'number') {
+                return formatNumber(n.value);
+            } else if (n.value instanceof Date) {
+                return formatDate(n.value);
+            } else {
+                return formatString(n.value);
+            }
+        } else {
+            console.log('fail');
+            return '            ';
+        }
+    }
 
-	function sendLines(lineA, lineB) {
+    // http://en.wikipedia.org/wiki/Seven-segment_display
+    // result += 'Y.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
+    // result += 'Z.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
 
-		if (!sp) {
-			sp = new SerialPort.SerialPort('/dev/ttyAMA0', {
-				baudrate: 19200
-			});
-			sp.on('open', portOpen);
-			sp.on('error', displayError);
-		}
+    function openPort(port) {
+        if (!sp) {
+            sp = new SerialPort.SerialPort(port, {
+                baudrate: 19200
+            });
+            sp.on('open', portOpen);
+            sp.on('error', displayError);
+        }
+    }
 
-		if (sp.isOpen()) {
+    function sendLines(lineA, lineB) {
+        if (sp.isOpen()) {
+            if(lineA) {
+                sp.write('W' + formatLine(lineA) + '\r');
+            }
+            if(lineB) {
+                setTimeout(function(){
+                    sp.write('X' + formatLine(lineB) + '\r');
+                }, 100);
+            }
+        }
+    }
 
-			if(lineA) {
-				sp.write('W' + formatLine(lineA) + '\r', onWrite);		
-			}
-			if(lineB) {
-				setTimeout(function(){
-					sp.write('X' + formatLine(lineB) + '\r', onWrite);
-				}, 50);	
-			}
-		}
-	}
+    function portOpen() {
+        console.log('port open');
+//        sp.on('data', function (data) {
+//            // TODO: concat buffer
+//        });
+//        sp.on('end', function() {
+//            // TODO: display result
+//        });
+    }
 
-	function onWrite() {
-		console.log('write return');
-	}
+    function displayError(err) {
+        console.error(err.message);
+    }
 
-	function portOpen() {
-		console.log('port open');
-		sp.on('data', function (data) {
-			// TODO: concat buffer
-		});
-		sp.on('end', function() {
-			// TODO: display result
-		});
-	}
+    function listPorts(next) {
+        SerialPort.list(function (err, ports) {
 
-	function displayError(err) {
-		console.error(err.message);
-	}
+            if(err) {
+                console.log(JSON.stringify(err));
+            } else {
+                console.log(JSON.stringify(ports));
+                ports.forEach(function (port) {
+                    console.log(port.comName);
+                    console.log(port.pnpId);
+                    console.log(port.manufacturer);
+                });
+            }
+            next(err);
+        });
+    }
 
-	function listPorts(next) {
-		SerialPort.list(function (err, ports) {
-
-			if(err) {
-				console.log(JSON.stringify(err));			
-			} else {
-				console.log(JSON.stringify(ports));
-				ports.forEach(function (port) {
-					console.log(port.comName);
-					console.log(port.pnpId);
-					console.log(port.manufacturer);
-				});
-			}
-			next(err);
-		});
-	}
-
-	module.exports = {
-		sendLines: sendLines,
-		listPorts: listPorts
-	};
+    module.exports = {
+        openPort: openPort,
+        sendLines: sendLines,
+        listPorts: listPorts
+    };
 
 })();
