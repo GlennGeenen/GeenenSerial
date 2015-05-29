@@ -1,189 +1,198 @@
 (function () {
 
-    'use strict';
+	'use strict';
 
-    var SerialPort = require('serialport');
-    var sp;
+	var SerialPort = require('serialport');
+	var sp;
 
-    function formatNumber(n) {
-        var hours = Math.floor(+n / 60 / 60);
-        var minutes = Math.floor((+n - (hours * 60 * 60)) / 60);
-        var seconds = Math.round(+n - (hours * 60 * 60) - (minutes * 60));
+	function formatNumber(n) {
+		var hours = Math.floor(+n / 60 / 60);
+		var minutes = Math.floor((+n - (hours * 60 * 60)) / 60);
+		var seconds = Math.round(+n - (hours * 60 * 60) - (minutes * 60));
+		return formatArray([hours === 0 ? '' : hours.toString(), minutes.toString(), seconds.toString()]);
+	}
 
-        var result = formatSplit(hours.toString());
-        result += formatSplit(minutes.toString());
-        result += formatSplit(seconds.toString(), true);
+	function formatArray(arr) {
 
-        return result;
-    }
+		if(arr.length === 3) {
 
-    function formatSplit(n, end) {
-        if (typeof end === 'undefined') {
-            end = false;
-        }
+			var result = '';
+			var tmp = '';
+			var started = false;
 
-        if (n && n.length === 2) {
-            return n[0] + ' ' + n[1] + (end ? ' ' : '.');
-        } else if (n && n.length === 1) {
-            return '0 ' + n[0] + (end ? ' ' : '.');
-        } else {
-            return end ? '0 0 ' : '0 0.';
-        }
-    }
+			for(var i = 0; i < 3; ++i) {
+				tmp = formatSplit(arr[i], started, i === 2);
+				if(tmp[0] !== ' ') {
+					started = true;
+				}
+				result += tmp;
+			}
+			return result;
 
-    function formatString(time) {
-        if (time.match(/^(?:\d{1,2}:)(?:[0-5]\d:)(?:[0-5]\d)$/g) ||
-            time.match(/^(?:\d{1,2}:)(?:[0-5]\d)$/g)) {
-            var arr = time.split(':');
+		} else {
+			return '            ';
+		}
+	}
 
-            while (arr.length < 3) {
-                arr.unshift('');
-            }
+	function formatSplit(n, started, end) {
+		if (typeof end === 'undefined') {
+			end = false;
+		}
 
-            var result = formatSplit(arr[0]);
-            result += formatSplit(arr[1]);
-            result += formatSplit(arr[2], true);
+		if (n && n.length === 2) {
+			return n[0] + ' ' + n[1] + (end ? ' ' : '.');
+		} else if (n && n.length === 1) {
+			return (started ? '0 ' : '  ') + n[0] + (end ? ' ' : '.');
+		} else {
+			return started ? (end ? '0 0 ' : '0 0.') : '    ';
+		}
+	}
 
-            return result;
+	function formatString(time) {
+		if (time.match(/^(?:\d{1,2}:)(?:[0-5]\d:)(?:[0-5]\d)$/g) ||
+			time.match(/^(?:\d{1,2}:)(?:[0-5]\d)$/g)) {
+			var arr = time.split(':');
+			while (arr.length < 3) {
+				arr.unshift('');
+			}
+			return formatArray(arr);
+		} else {
+			return '            ';
+		}
+	}
 
-        } else {
-            return '0 0.0 0.0 0 ';
-        }
-    }
+	function formatDate(n) {
+		var seconds = n.getHours() * 60 * 60;
+		seconds += n.getMinutes() * 60;
+		seconds += n.getSeconds();
+		return formatNumber(seconds);
+	}
 
-    function getNumber(n) {
-        var str = n.toString();
-        var i;
-        var result = '';
+	function getNumber(n) {
+		var str = n.toString();
+		var i;
+		var result = '';
 
-        for(i = 6; i > str.length; --i) {
-            result += '  ';
-        }
-        for(i = 0; i < str.length && i < 6; ++i) {
-            result += str[i] + ' ';
-        }
-        return result;
-    }
+		for(i = 6; i > str.length; --i) {
+			result += '  ';
+		}
+		for(i = 0; i < str.length && i < 6; ++i) {
+			result += str[i] + ' ';
+		}
+		return result;
+	}
 
-    function getMoney(n) {
-        var arr = n.toString().split('.');
-        var i;
-        var result = '';
+	function getMoney(n) {
+		var arr = n.toString().split('.');
+		var i;
+		var result = '';
 
-        for(i = 4; i > arr[0].length; --i) {
-            result += '  ';
-        }
-        for(i = 0; i < arr[0].length && i < 4; ++i) {
-            result += arr[0][i] + ' ';
-        }
+		for(i = 4; i > arr[0].length; --i) {
+			result += '  ';
+		}
+		for(i = 0; i < arr[0].length && i < 4; ++i) {
+			result += arr[0][i] + ' ';
+		}
 
-        // Add .
-        result = result.substring(0, result.length - 1) + '.';
-	
-	if(arr.length > 1) {
-		if(arr[1].length > 1) {
-			result += arr[1][0] + ' ' + arr[1][1] + ' ';
-		} else if(arr[1].length > 0) {
-			result += arr[1][0] + ' 0 ';
+		// Add .
+		result = result.substring(0, result.length - 1) + '.';
+
+		if(arr.length > 1) {
+			if(arr[1].length > 1) {
+				result += arr[1][0] + ' ' + arr[1][1] + ' ';
+			} else if(arr[1].length > 0) {
+				result += arr[1][0] + ' 0 ';
+			} else {
+				result += '0 0 ';
+			}
 		} else {
 			result += '0 0 ';
 		}
-	} else {
-		result += '0 0 ';
+		return result;
 	}
 
-        return result;
-    }
+	function formatLine(n) {
 
-    function formatDate(n) {
-        var seconds = n.getHours() * 60 * 60;
-        seconds += n.getMinutes() * 60;
-        seconds += n.getSeconds();
-        return formatNumber(seconds);
-    }
+		if (n && n.type && n.value) {
+			if(n.type === 'number') {
+				return getNumber(n.value);
+			} else if(n.type === 'money') {
+				return getMoney(n.value);
+			} else if (typeof n.value === 'number') {
+				return formatNumber(n.value);
+			} else if (n.value instanceof Date) {
+				return formatDate(n.value);
+			} else {
+				return formatString(n.value);
+			}
+		} else {
+			console.log('fail');
+			return '            ';
+		}
+	}
 
-    function formatLine(n) {
+	// http://en.wikipedia.org/wiki/Seven-segment_display
+	// result += 'Y.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
+	// result += 'Z.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
 
-        if (n && n.type && n.value) {
-            if(n.type === 'number') {
-                return getNumber(n.value);
-            } else if(n.type === 'money') {
-                return getMoney(n.value);
-            } else if (typeof n.value === 'number') {
-                return formatNumber(n.value);
-            } else if (n.value instanceof Date) {
-                return formatDate(n.value);
-            } else {
-                return formatString(n.value);
-            }
-        } else {
-            console.log('fail');
-            return '            ';
-        }
-    }
+	function openPort(port) {
+		if (!sp) {
+			sp = new SerialPort.SerialPort(port, {
+				baudrate: 19200
+			});
+			sp.on('open', portOpen);
+			sp.on('error', displayError);
+		}
+	}
 
-    // http://en.wikipedia.org/wiki/Seven-segment_display
-    // result += 'Y.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
-    // result += 'Z.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG.ABCDEFG\r\n';
+	function sendLines(lineA, lineB) {
+		if (sp && sp.isOpen()) {
+			if(lineA) {
+				sp.write('W' + formatLine(lineA) + '\r');
+			}
+			if(lineB) {
+				setTimeout(function(){
+					sp.write('X' + formatLine(lineB) + '\r');
+				}, 100);
+			}
+		}
+	}
 
-    function openPort(port) {
-        if (!sp) {
-            sp = new SerialPort.SerialPort(port, {
-                baudrate: 19200
-            });
-            sp.on('open', portOpen);
-            sp.on('error', displayError);
-        }
-    }
-
-    function sendLines(lineA, lineB) {
-        if (sp.isOpen()) {
-            if(lineA) {
-                sp.write('W' + formatLine(lineA) + '\r');
-            }
-            if(lineB) {
-                setTimeout(function(){
-                    sp.write('X' + formatLine(lineB) + '\r');
-                }, 100);
-            }
-        }
-    }
-
-    function portOpen() {
-        console.log('port open');
+	function portOpen() {
+		console.log('port open');
 //        sp.on('data', function (data) {
 //            // TODO: concat buffer
 //        });
 //        sp.on('end', function() {
 //            // TODO: display result
 //        });
-    }
+	}
 
-    function displayError(err) {
-        console.error(err.message);
-    }
+	function displayError(err) {
+		console.error(err.message);
+	}
 
-    function listPorts(next) {
-        SerialPort.list(function (err, ports) {
+	function listPorts(next) {
+		SerialPort.list(function (err, ports) {
 
-            if(err) {
-                console.log(JSON.stringify(err));
-            } else {
-                console.log(JSON.stringify(ports));
-                ports.forEach(function (port) {
-                    console.log(port.comName);
-                    console.log(port.pnpId);
-                    console.log(port.manufacturer);
-                });
-            }
-            next(err);
-        });
-    }
+			if(err) {
+				console.log(JSON.stringify(err));
+			} else {
+				console.log(JSON.stringify(ports));
+				ports.forEach(function (port) {
+					console.log(port.comName);
+					console.log(port.pnpId);
+					console.log(port.manufacturer);
+				});
+			}
+			next(err);
+		});
+	}
 
-    module.exports = {
-        openPort: openPort,
-        sendLines: sendLines,
-        listPorts: listPorts
-    };
+	module.exports = {
+		openPort: openPort,
+		sendLines: sendLines,
+		listPorts: listPorts
+	};
 
 })();
