@@ -65,6 +65,28 @@
         return result;
     }
 
+    function getMoney(n) {
+        var arr = n.toString().split('.');
+        var i;
+        var result = '';
+
+        for(i = 4; i > arr[0].length; --i) {
+            result += '  ';
+        }
+        for(i = 0; i < str.length && i < 4; ++i) {
+            result += str[i] + ' ';
+        }
+
+        // Add .
+        result = result.substring(0, result.length - 1);
+
+        // Add decimal part
+        result += (arr[1][0] || ' ') + ' ';
+        result += (arr[1][1] || ' ') + ' ';
+
+        return result;
+    }
+
     function formatDate(n) {
         var seconds = n.getHours() * 60 * 60;
         seconds += n.getMinutes() * 60;
@@ -77,6 +99,8 @@
         if (n && n.type && n.value) {
             if(n.type === 'number') {
                 return getNumber(n.value);
+            } else if(n.type === 'money') {
+                return getMoney(n.value);
             } else if (typeof n.value === 'number') {
                 return formatNumber(n.value);
             } else if (n.value instanceof Date) {
