@@ -87,7 +87,7 @@
 	function sendLines(lineA, lineB) {
 
 		if (!sp) {
-			sp = new SerialPort.SerialPort('/dev/ttyS0', {
+			sp = new SerialPort.SerialPort('/dev/ttyAMA0', {
 				baudrate: 19200
 			});
 			sp.on('open', portOpen);
