@@ -73,7 +73,7 @@
         for(i = 4; i > arr[0].length; --i) {
             result += '  ';
         }
-        for(i = 0; i < str.length && i < 4; ++i) {
+        for(i = 0; i < arr[0].length && i < 4; ++i) {
             result += str[i] + ' ';
         }
 
