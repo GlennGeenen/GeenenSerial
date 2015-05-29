@@ -74,15 +74,23 @@
             result += '  ';
         }
         for(i = 0; i < arr[0].length && i < 4; ++i) {
-            result += str[i] + ' ';
+            result += arr[0][i] + ' ';
         }
 
         // Add .
-        result = result.substring(0, result.length - 1);
-
-        // Add decimal part
-        result += (arr[1][0] || ' ') + ' ';
-        result += (arr[1][1] || ' ') + ' ';
+        result = result.substring(0, result.length - 1) + '.';
+	
+	if(arr.length > 1) {
+		if(arr[1].length > 1) {
+			result += arr[1][0] + ' ' + arr[1][1] + ' ';
+		} else if(arr[1].length > 0) {
+			result += arr[1][0] + ' 0 ';
+		} else {
+			result += '0 0 ';
+		}
+	} else {
+		result += '0 0 ';
+	}
 
         return result;
     }
