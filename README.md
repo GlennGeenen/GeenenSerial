@@ -1,7 +1,7 @@
 # GeenenSerial
 Communicate with LED display over serialport
 
-Rest server listens to port 1337.
+Rest server listens to port 1337. Server expects json.
 
 ### Samples
 
