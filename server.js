@@ -7,17 +7,19 @@ serial.openPort('/dev/ttyAMA0');
 
 http.createServer(function (req, res) {
 
+    // CORS
+    res.writeHead(200, {
+        'Access-Control-Allow-Origin': '*'
+    });
+
     if (req.method === 'OPTIONS') {
-        // add needed headers
-        var headers = {
+        res.writeHead(200, {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'POST, GET, PUT, DELETE, OPTIONS',
             'Access-Control-Allow-Credentials': true,
             'Access-Control-Max-Age': 86400, // 24 hours
             'Access-Control-Allow-Headers': 'X-Requested-With, Access-Control-Allow-Origin, X-HTTP-Method-Override, Content-Type, Authorization, Accept'
-        };
-        // respond to the request
-        res.writeHead(200, headers);
+        });
         return res.end();
     }
 
